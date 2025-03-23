@@ -370,33 +370,38 @@
                     // เช็คว่าใช้ Monad Testnet หรือไม่
                     const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                     
-                    if (chainId !== MONAD_TESTNET_CHAIN_ID) {
+                    // แทนที่จะตรวจสอบ chainId เราจะพยายามเพิ่มเครือข่ายก่อน
+                    try {
+                        // พยายามเพิ่ม Monad Testnet โดยตรง
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [
+                                {
+                                    chainId: MONAD_TESTNET_CHAIN_ID,
+                                    chainName: 'Monad Testnet',
+                                    nativeCurrency: {
+                                        name: 'Monad',
+                                        symbol: 'MON',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: [MONAD_TESTNET_RPC],
+                                    blockExplorerUrls: ['https://testnet.monadexplorer.com/']
+                                },
+                            ],
+                        });
+                    } catch (addError) {
+                        // หากไม่สามารถเพิ่มเครือข่ายได้ ลองสลับไปยังเครือข่ายที่มีอยู่แล้ว
                         try {
-                            // พยายามสลับไปยัง Monad Testnet
                             await window.ethereum.request({
                                 method: 'wallet_switchEthereumChain',
                                 params: [{ chainId: MONAD_TESTNET_CHAIN_ID }],
                             });
                         } catch (switchError) {
-                            // หากเครือข่ายยังไม่ถูกเพิ่มในกระเป๋า MetaMask
+                            // หากเครือข่ายยังไม่ถูกเพิ่มในกระเป๋า MetaMask และไม่สามารถสลับได้
                             if (switchError.code === 4902) {
                                 try {
-                                    await window.ethereum.request({
-                                        method: 'wallet_addEthereumChain',
-                                        params: [
-                                            {
-                                                chainId: MONAD_TESTNET_CHAIN_ID,
-                                                chainName: 'Monad Testnet',
-                                                nativeCurrency: {
-                                                    name: 'Monad',
-                                                    symbol: 'MON',
-                                                    decimals: 18
-                                                },
-                                                rpcUrls: [MONAD_TESTNET_RPC],
-                                                blockExplorerUrls: ['https://testnet.monadexplorer.com/']
-                                            },
-                                        ],
-                                    });
+                                    showNotification('ไม่สามารถเพิ่มหรือสลับไปยัง Monad Testnet ได้', true);
+                                return;
                                 } catch (addError) {
                                     showNotification('ไม่สามารถเพิ่ม Monad Testnet ได้ กรุณาเพิ่มเครือข่ายด้วยตนเอง', true);
                                     return;
