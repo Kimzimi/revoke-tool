@@ -235,8 +235,8 @@
         // เริ่มต้น Web3 provider
         let web3;
         let accounts = [];
-        const MONAD_TESTNET_CHAIN_ID = '0x8297';  // Monad Testnet Chain ID (hex)
-        const MONAD_TESTNET_RPC = 'https://rpc.testnet.monad.xyz/';
+        const MONAD_TESTNET_CHAIN_ID = '0x27CF';  // Chain ID 10143 ในรูปแบบ hex (10143 = 0x27CF)
+        const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz/';
 
         // DOM Elements
         const connectWalletBtn = document.getElementById('connectWalletBtn');
@@ -389,11 +389,11 @@
                                                 chainName: 'Monad Testnet',
                                                 nativeCurrency: {
                                                     name: 'Monad',
-                                                    symbol: 'MONAD',
+                                                    symbol: 'MON',
                                                     decimals: 18
                                                 },
                                                 rpcUrls: [MONAD_TESTNET_RPC],
-                                                blockExplorerUrls: ['https://explorer.testnet.monad.xyz/']
+                                                blockExplorerUrls: ['https://testnet.monadexplorer.com/']
                                             },
                                         ],
                                     });
