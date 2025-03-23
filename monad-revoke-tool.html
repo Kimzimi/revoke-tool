@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monad Testnet Revoke Tool</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            width: 100%;
+        }
+        header {
+            background-color: #6366F1;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        .section {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        button {
+            background-color: #6366F1;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #4F46E5;
+        }
+        button:disabled {
+            background-color: #9CA3AF;
+            cursor: not-allowed;
+        }
+        .button-secondary {
+            background-color: #FFFFFF;
+            color: #4B5563;
+            border: 1px solid #D1D5DB;
+        }
+        .button-secondary:hover {
+            background-color: #F9FAFB;
+        }
+        .approval-item {
+            padding: 0.75rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.375rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .token-address {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #6B7280;
+        }
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 1rem;
+            background-color: #10B981;
+            color: white;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(150%);
+            transition: transform 0.3s ease-out;
+            z-index: 50;
+        }
+        .notification.show {
+            transform: translateY(0);
+        }
+        .notification.error {
+            background-color: #EF4444;
+        }
+        .status {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .status.success {
+            background-color: #D1FAE5;
+            color: #065F46;
+        }
+        .status.error {
+            background-color: #FEE2E2;
+            color: #991B1B;
+        }
+        .status.warning {
+            background-color: #FEF3C7;
+            color: #92400E;
+        }
+        .address-display {
+            font-family: monospace;
+            font-size: 0.875rem;
+            background-color: #F3F4F6;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 1rem;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #6366F1;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        input {
+            padding: 0.5rem;
+            border: 1px solid #D1D5DB;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+        .network-badge {
+            display: inline-block;
+            background-color: #93C5FD;
+            color: #1E40AF;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            margin-left: 0.5rem;
+        }
+        .help-text {
+            font-size: 0.875rem;
+            color: #6B7280;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>
+                Monad Testnet Revoke Tool 
+                <span class="network-badge">Testnet</span>
+            </h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="section">
+            <h2>เชื่อมต่อกระเป๋า</h2>
+            <p>เชื่อมต่อกระเป๋าของคุณเพื่อดูและเพิกถอนการอนุญาตบน Monad Testnet</p>
+            <button id="connectWalletBtn">เชื่อมต่อกระเป๋า</button>
+            <div id="connectedAddress" class="address-display hidden"></div>
+            <div id="connectionStatus" class="status hidden"></div>
+        </div>
+
+        <div id="approvalSection" class="section hidden">
+            <h2>การอนุญาตของคุณ</h2>
+            <p>รายการอนุญาตที่คุณได้ให้ไว้กับ dApps ต่างๆ บน Monad Testnet</p>
+            
+            <div id="loadingApprovals" class="hidden">
+                <div class="loader"></div> กำลังโหลดการอนุญาตของคุณ...
+            </div>
+            
+            <div id="noApprovals" class="hidden">
+                <p>ไม่พบการอนุญาตใดๆ สำหรับกระเป๋านี้บน Monad Testnet</p>
+            </div>
+            
+            <div id="approvalsList"></div>
+        </div>
+
+        <div id="revokeManualSection" class="section hidden">
+            <h2>เพิกถอนการอนุญาตด้วยตนเอง</h2>
+            <p>หากคุณมีที่อยู่ของ Token Contract ที่ต้องการเพิกถอนการอนุญาต สามารถป้อนได้ที่นี่</p>
+            
+            <input type="text" id="tokenAddress" placeholder="ที่อยู่ Token Contract (0x...)" />
+            <input type="text" id="spenderAddress" placeholder="ที่อยู่ Spender (0x...)" />
+            
+            <button id="revokeManualBtn">เพิกถอนการอนุญาต</button>
+            <p class="help-text">หมายเหตุ: การเพิกถอนการอนุญาตจะทำให้ Smart Contract ไม่สามารถใช้งาน Token ของคุณได้อีกต่อไป</p>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // เริ่มต้น Web3 provider
+        let web3;
+        let accounts = [];
+        const MONAD_TESTNET_CHAIN_ID = '0x8297';  // Monad Testnet Chain ID (hex)
+        const MONAD_TESTNET_RPC = 'https://rpc.testnet.monad.xyz/';
+
+        // DOM Elements
+        const connectWalletBtn = document.getElementById('connectWalletBtn');
+        const connectedAddress = document.getElementById('connectedAddress');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const approvalSection = document.getElementById('approvalSection');
+        const loadingApprovals = document.getElementById('loadingApprovals');
+        const noApprovals = document.getElementById('noApprovals');
+        const approvalsList = document.getElementById('approvalsList');
+        const revokeManualSection = document.getElementById('revokeManualSection');
+        const tokenAddressInput = document.getElementById('tokenAddress');
+        const spenderAddressInput = document.getElementById('spenderAddress');
+        const revokeManualBtn = document.getElementById('revokeManualBtn');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notificationText');
+
+        // ERC-20 Token ABI (เฉพาะส่วนที่จำเป็น)
+        const TOKEN_ABI = [
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "_spender",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "_owner",
+                        "type": "address"
+                    },
+                    {
+                        "name": "_spender",
+                        "type": "address"
+                    }
+                ],
+                "name": "allowance",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "name",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // สัญญา ERC-20 ที่ทราบบน Monad Testnet (ตัวอย่างสมมติ - ต้องใช้ที่อยู่จริงในการใช้งานจริง)
+        const KNOWN_TOKENS = [
+            { 
+                address: '0xBD0c6B276F83Ab894C9F6D7A0F9d6fc5c5E9f95c',
+                name: 'Monad Test Token',
+                symbol: 'MTT'
+            },
+            {
+                address: '0x1234567890123456789012345678901234567890',
+                name: 'Mock USDC',
+                symbol: 'mUSDC'
+            }
+        ];
+
+        // Event Listeners
+        connectWalletBtn.addEventListener('click', connectWallet);
+        revokeManualBtn.addEventListener('click', revokeManualApproval);
+
+        // ฟังก์ชันเชื่อมต่อกระเป๋า
+        async function connectWallet() {
+            if (window.ethereum) {
+                try {
+                    // เช็คว่าใช้ Monad Testnet หรือไม่
+                    const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                    
+                    if (chainId !== MONAD_TESTNET_CHAIN_ID) {
+                        try {
+                            // พยายามสลับไปยัง Monad Testnet
+                            await window.ethereum.request({
+                                method: 'wallet_switchEthereumChain',
+                                params: [{ chainId: MONAD_TESTNET_CHAIN_ID }],
+                            });
+                        } catch (switchError) {
+                            // หากเครือข่ายยังไม่ถูกเพิ่มในกระเป๋า MetaMask
+                            if (switchError.code === 4902) {
+                                try {
+                                    await window.ethereum.request({
+                                        method: 'wallet_addEthereumChain',
+                                        params: [
+                                            {
+                                                chainId: MONAD_TESTNET_CHAIN_ID,
+                                                chainName: 'Monad Testnet',
+                                                nativeCurrency: {
+                                                    name: 'Monad',
+                                                    symbol: 'MONAD',
+                                                    decimals: 18
+                                                },
+                                                rpcUrls: [MONAD_TESTNET_RPC],
+                                                blockExplorerUrls: ['https://explorer.testnet.monad.xyz/']
+                                            },
+                                        ],
+                                    });
+                                } catch (addError) {
+                                    showNotification('ไม่สามารถเพิ่ม Monad Testnet ได้ กรุณาเพิ่มเครือข่ายด้วยตนเอง', true);
+                                    return;
+                                }
+                            } else {
+                                showNotification('ไม่สามารถสลับไปยัง Monad Testnet ได้', true);
+                                return;
+                            }
+                        }
+                    }
+                    
+                    // ขอการเชื่อมต่อกับกระเป๋า
+                    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    
+                    if (accounts.length > 0) {
+                        // อัปเดต UI
+                        connectedAddress.textContent = accounts[0];
+                        connectedAddress.classList.remove('hidden');
+                        connectionStatus.textContent = 'เชื่อมต่อสำเร็จกับ Monad Testnet แล้ว';
+                        connectionStatus.classList.remove('hidden');
+                        connectionStatus.classList.add('success');
+                        approvalSection.classList.remove('hidden');
+                        revokeManualSection.classList.remove('hidden');
+                        connectWalletBtn.textContent = 'เปลี่ยนกระเป๋า';
+                        
+                        // สร้าง Web3 provider
+                        web3 = new Web3(window.ethereum);
+                        
+                        // โหลดการอนุญาต
+                        loadApprovals();
+                        
+                        // ติดตามการเปลี่ยนแปลงบัญชี
+                        window.ethereum.on('accountsChanged', handleAccountsChanged);
+                        window.ethereum.on('chainChanged', handleChainChanged);
+                    }
+                } catch (error) {
+                    console.error('เกิดข้อผิดพลาดในการเชื่อมต่อกระเป๋า:', error);
+                    connectionStatus.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อกระเป๋า: ' + error.message;
+                    connectionStatus.classList.remove('hidden');
+                    connectionStatus.classList.add('error');
+                }
+            } else {
+                connectionStatus.textContent = 'กรุณาติดตั้ง MetaMask หรือกระเป๋าที่รองรับ Ethereum';
+                connectionStatus.classList.remove('hidden');
+                connectionStatus.classList.add('warning');
+            }
+        }
+
+        // จัดการเมื่อบัญชีเปลี่ยน
+        function handleAccountsChanged(newAccounts) {
+            if (newAccounts.length === 0) {
+                // ผู้ใช้ยกเลิกการเชื่อมต่อกระเป๋า
+                resetConnection();
+            } else if (newAccounts[0] !== accounts[0]) {
+                // เปลี่ยนบัญชี
+                accounts = newAccounts;
+                connectedAddress.textContent = accounts[0];
+                loadApprovals();
+            }
+        }
+
+        // จัดการเมื่อเครือข่ายเปลี่ยน
+        function handleChainChanged(chainId) {
+            if (chainId !== MONAD_TESTNET_CHAIN_ID) {
+                connectionStatus.textContent = 'กรุณาสลับไปยัง Monad Testnet';
+                connectionStatus.classList.remove('success');
+                connectionStatus.classList.add('warning');
+                approvalSection.classList.add('hidden');
+                revokeManualSection.classList.add('hidden');
+            } else {
+                connectionStatus.textContent = 'เชื่อมต่อสำเร็จกับ Monad Testnet แล้ว';
+                connectionStatus.classList.remove('warning');
+                connectionStatus.classList.add('success');
+                approvalSection.classList.remove('hidden');
+                revokeManualSection.classList.remove('hidden');
+                loadApprovals();
+            }
+        }
+
+        // รีเซ็ตการเชื่อมต่อ
+        function resetConnection() {
+            accounts = [];
+            connectedAddress.classList.add('hidden');
+            connectionStatus.textContent = 'ไม่ได้เชื่อมต่อกระเป๋า';
+            connectionStatus.classList.remove('success');
+            connectionStatus.classList.add('warning');
+            approvalSection.classList.add('hidden');
+            revokeManualSection.classList.add('hidden');
+            connectWalletBtn.textContent = 'เชื่อมต่อกระเป๋า';
+        }
+
+        // โหลดรายการการอนุญาต
+        async function loadApprovals() {
+            if (!accounts[0]) return;
+            
+            loadingApprovals.classList.remove('hidden');
+            approvalsList.innerHTML = '';
+            noApprovals.classList.add('hidden');
+            
+            try {
+                const userAddress = accounts[0];
+                let hasApprovals = false;
+                
+                // ตรวจสอบการอนุญาตสำหรับทุก Token ที่ทราบ
+                for (const token of KNOWN_TOKENS) {
+                    const tokenContract = new web3.eth.Contract(TOKEN_ABI, token.address);
+                    
+                    // สร้างรายการ spender จำลอง (ในการใช้งานจริงควรดึงจากอีเวนต์หรือAPI)
+                    const mockSpenders = [
+                        '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D', // Uniswap Router
+                        '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45'  // Another DEX
+                    ];
+                    
+                    for (const spender of mockSpenders) {
+                        try {
+                            const allowance = await tokenContract.methods.allowance(userAddress, spender).call();
+                            
+                            // หากมีการอนุญาต (อาจทำงานกับ token จริงไม่ได้ในทุกกรณี เนื่องจากเป็น testnet)
+                            if (allowance > 0) {
+                                hasApprovals = true;
+                                
+                                const approvalItem = document.createElement('div');
+                                approvalItem.className = 'approval-item';
+                                approvalItem.innerHTML = `
+                                    <div class="token-info">
+                                        <div>
+                                            <strong>${token.symbol}</strong>
+                                            <div class="token-address">${truncateAddress(token.address)}</div>
+                                        </div>
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="revoke-btn" data-token="${token.address}" data-spender="${spender}">เพิกถอน</button>
+                                    </div>
+                                `;
+                                
+                                approvalsList.appendChild(approvalItem);
+                                
+                                // เพิ่ม event listener สำหรับปุ่มเพิกถอน
+                                const revokeBtn = approvalItem.querySelector('.revoke-btn');
+                                revokeBtn.addEventListener('click', () => revokeApproval(token.address, spender));
+                            }
+                        } catch (error) {
+                            console.error(`เกิดข้อผิดพลาดในการดึงการอนุญาตสำหรับ ${token.symbol}:`, error);
+                        }
+                    }
+                }
+                
+                if (!hasApprovals) {
+                    noApprovals.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดการอนุญาต:', error);
+                showNotification('เกิดข้อผิดพลาดในการโหลดการอนุญาต', true);
+            } finally {
+                loadingApprovals.classList.add('hidden');
+            }
+        }
+
+        // เพิกถอนการอนุญาต
+        async function revokeApproval(tokenAddress, spenderAddress) {
+            if (!web3 || !accounts[0]) {
+                showNotification('กรุณาเชื่อมต่อกระเป๋าก่อน', true);
+                return;
+            }
+            
+            try {
+                const tokenContract = new web3.eth.Contract(TOKEN_ABI, tokenAddress);
+                
+                // เรียกฟังก์ชัน approve โดยส่ง 0 เป็นค่า
+                const tx = await tokenContract.methods.approve(spenderAddress, '0').send({
+                    from: accounts[0]
+                });
+                
+                showNotification('เพิกถอนการอนุญาตสำเร็จ!');
+                
+                // โหลดการอนุญาตใหม่
+                setTimeout(loadApprovals, 2000);
+                
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการเพิกถอนการอนุญาต:', error);
+                showNotification('เกิดข้อผิดพลาดในการเพิกถอนการอนุญาต: ' + error.message, true);
+            }
+        }
+
+        // เพิกถอนการอนุญาตด้วยตนเอง
+        async function revokeManualApproval() {
+            const tokenAddress = tokenAddressInput.value;
+            const spenderAddress = spenderAddressInput.value;
+            
+            if (!web3 || !accounts[0]) {
+                showNotification('กรุณาเชื่อมต่อกระเป๋าก่อน', true);
+                return;
+            }
+            
+            if (!web3.utils.isAddress(tokenAddress) || !web3.utils.isAddress(spenderAddress)) {
+                showNotification('กรุณาระบุที่อยู่ที่ถูกต้อง', true);
+                return;
+            }
+            
+            await revokeApproval(tokenAddress, spenderAddress);
+        }
+
+        // แสดงการแจ้งเตือน
+        function showNotification(message, isError = false) {
+            notification.className = isError ? 'notification error' : 'notification';
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // ตัดที่อยู่ให้สั้นลง
+        function truncateAddress(address) {
+            return address.slice(0, 6) + '...' + address.slice(-4);
+        }
+
+        // โหลด web3.js จาก CDN
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // โหลด web3.js เมื่อหน้าเว็บโหลดเสร็จ
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await loadScript('https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.2/web3.min.js');
+                console.log('Web3.js loaded successfully');
+            } catch (error) {
+                console.error('Failed to load Web3.js:', error);
+                connectionStatus.textContent = 'ไม่สามารถโหลดไลบรารี Web3.js ได้';
+                connectionStatus.classList.remove('hidden');
+                connectionStatus.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html>
